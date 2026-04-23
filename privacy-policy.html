@@ -3,71 +3,101 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NORMA Privacy Policy — how we collect, use, and protect your personal data.">
+  <link rel="canonical" href="https://getnorma.app/privacy-policy.html">
   <title>NORMA — Privacy Policy</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 720px; margin: 0 auto; padding: 24px; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
-    h1 { color: #ffffff; font-size: 28px; }
-    h2 { color: #f97316; font-size: 20px; margin-top: 32px; }
-    p, li { font-size: 15px; }
-    a { color: #60a5fa; }
-    ul { padding-left: 20px; }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Privacy Policy</h1>
-  <p><strong>Effective Date:</strong> February 21, 2026</p>
-  <p>NORMA ("we", "our", "the app") is a sports alerts and wager tracking application. This Privacy Policy explains what data we collect, how we use it, and your choices.</p>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="terms-of-service.html">Terms of Service</a>
+  </nav>
+  <main>
+    <h1>Privacy Policy</h1>
+    <p><strong>Effective Date:</strong> April 23, 2026</p>
+    <p>NORMA ("we", "our", "the app") is a sports alerts and wager tracking application. This Privacy Policy explains what data we collect, how we use it, and your choices.</p>
 
-  <h2>1. Data We Collect</h2>
-  <ul>
-    <li><strong>Account information:</strong> Email address, display name, and authentication credentials (via email/password or Apple Sign-In).</li>
-    <li><strong>Wager data:</strong> Wager descriptions, lines, odds, sportsbook selections, and bet slip images you choose to scan.</li>
-    <li><strong>Preferences:</strong> Favorite teams, notification settings, quiet hours, and timezone.</li>
-    <li><strong>Connections:</strong> Which streaming services and sportsbooks you indicate you use (no login credentials are stored for these services).</li>
-    <li><strong>Prediction market positions:</strong> If you connect Kalshi or Polymarket, your API credentials and position data.</li>
-    <li><strong>Device information:</strong> Push notification token (Expo Push), device type, and app version.</li>
-  </ul>
+    <h2>1. Data We Collect</h2>
+    <ul>
+      <li><strong>Account information:</strong> Email address, display name, and authentication credentials (via email/password or Apple Sign-In).</li>
+      <li><strong>Wager data:</strong> Wager descriptions, lines, odds, sportsbook selections, and bet slip images you choose to scan.</li>
+      <li><strong>Preferences:</strong> Favorite teams, notification settings, quiet hours, and timezone.</li>
+      <li><strong>Connections:</strong> Which streaming services and sportsbooks you indicate you use (no login credentials are stored for these services).</li>
+      <li><strong>Prediction market positions:</strong> If you connect Kalshi or Polymarket, your API credentials and position data.</li>
+      <li><strong>Device information:</strong> Push notification token (Expo Push), device type, and app version.</li>
+    </ul>
 
-  <h2>2. How We Use Your Data</h2>
-  <ul>
-    <li>Deliver personalized game alerts based on your followed teams and active wagers.</li>
-    <li>Track and display your wager history and outcomes.</li>
-    <li>Send push notifications for games you follow.</li>
-    <li>Provide deep links to streaming apps you have connected.</li>
-  </ul>
+    <h2>2. Cookies and Tracking</h2>
+    <p>The NORMA app does not use cookies or third-party tracking technologies. These support pages are hosted on GitHub Pages, which may apply its own cookies and analytics independently of NORMA. We do not add our own analytics or tracking to these pages.</p>
 
-  <h2>3. Third-Party Services</h2>
-  <p>NORMA integrates with the following services:</p>
-  <ul>
-    <li><strong>Supabase:</strong> Authentication, database, and serverless functions (data stored in Supabase's infrastructure).</li>
-    <li><strong>ESPN:</strong> Live game scores (public API, no user data shared).</li>
-    <li><strong>SportsDataIO:</strong> Game schedules and scores (no user data shared).</li>
-    <li><strong>Sportradar:</strong> Play-by-play and game summaries (no user data shared).</li>
-    <li><strong>The Odds API:</strong> Betting odds from DraftKings, FanDuel, BetMGM (no user data shared).</li>
-    <li><strong>Kalshi / Polymarket:</strong> Prediction market data (user-provided API credentials, stored securely).</li>
-    <li><strong>Expo Push Notifications:</strong> Delivering push notifications to your device.</li>
-  </ul>
+    <h2>3. How We Use Your Data</h2>
+    <ul>
+      <li>Deliver personalized game alerts based on your followed teams and active wagers.</li>
+      <li>Track and display your wager history and outcomes.</li>
+      <li>Send push notifications for games you follow.</li>
+      <li>Provide deep links to streaming apps you have connected.</li>
+    </ul>
 
-  <h2>4. Data Retention</h2>
-  <p>We retain your data for as long as your account is active. You can delete your account at any time from the Profile tab, which permanently removes all your data from our systems.</p>
+    <h2>4. Third-Party Services</h2>
+    <p>NORMA integrates with the following services:</p>
+    <ul>
+      <li><strong>Supabase:</strong> Authentication, database, and serverless functions. Data is stored in Supabase's infrastructure and encrypted at rest using AES-256 encryption.</li>
+      <li><strong>ESPN:</strong> Live game scores (public API, no user data shared).</li>
+      <li><strong>SportsDataIO:</strong> Game schedules and scores (no user data shared).</li>
+      <li><strong>Sportradar:</strong> Play-by-play and game summaries (no user data shared).</li>
+      <li><strong>The Odds API:</strong> Betting odds from DraftKings, FanDuel, BetMGM (no user data shared).</li>
+      <li><strong>Kalshi / Polymarket:</strong> Prediction market data. User-provided API credentials are encrypted at rest using AES-256 encryption and protected by row-level security.</li>
+      <li><strong>Expo Push Notifications:</strong> Delivering push notifications to your device.</li>
+    </ul>
 
-  <h2>5. Data Security</h2>
-  <p>Your data is protected by Supabase's row-level security policies, ensuring you can only access your own data. Authentication tokens are stored securely on-device using Expo SecureStore. API credentials for third-party services are protected by row-level security.</p>
+    <h2>5. Data Retention</h2>
+    <p>We retain your data for as long as your account is active. You can delete your account at any time from the Profile tab, which permanently removes all your data from our systems.</p>
 
-  <h2>6. Your Rights</h2>
-  <ul>
-    <li><strong>Access:</strong> View your data in the app at any time.</li>
-    <li><strong>Deletion:</strong> Delete your account and all associated data from the Profile tab.</li>
-    <li><strong>Portability:</strong> Contact us to request an export of your data.</li>
-  </ul>
+    <h2>6. Data Security</h2>
+    <p>Your data is protected by Supabase's row-level security policies, ensuring you can only access your own data. Authentication tokens are stored securely on-device using Expo SecureStore. API credentials for third-party services are encrypted at rest (AES-256) and protected by row-level security.</p>
 
-  <h2>7. Children's Privacy</h2>
-  <p>NORMA is intended for users 18 years of age or older. We do not knowingly collect data from children under 18.</p>
+    <h2>7. Your Rights</h2>
+    <ul>
+      <li><strong>Access:</strong> View your data in the app at any time.</li>
+      <li><strong>Correction:</strong> Update inaccurate account information from the Profile tab at any time.</li>
+      <li><strong>Deletion:</strong> Delete your account and all associated data from the Profile tab.</li>
+      <li><strong>Portability:</strong> Contact us to request an export of your data.</li>
+    </ul>
 
-  <h2>8. Changes to This Policy</h2>
-  <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated effective date.</p>
+    <h2>8. GDPR — Rights for EEA and UK Users</h2>
+    <p>If you are located in the European Economic Area (EEA) or United Kingdom, you have additional rights under the General Data Protection Regulation (GDPR) or UK GDPR. Our legal basis for processing your data is performance of a contract (providing the NORMA service) and, where applicable, your explicit consent.</p>
+    <ul>
+      <li><strong>Right to restrict processing:</strong> You may request that we limit how we use your data while a dispute is pending.</li>
+      <li><strong>Right to object:</strong> You may object to processing based on legitimate interests, including direct marketing.</li>
+      <li><strong>Right to erasure:</strong> You may request deletion of your personal data ("right to be forgotten"), subject to our legal obligations.</li>
+      <li><strong>Right to data portability:</strong> You may request your data in a structured, machine-readable format.</li>
+      <li><strong>Right to lodge a complaint:</strong> You have the right to lodge a complaint with your local data protection supervisory authority.</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at <a href="mailto:privacy@norma-app.com">privacy@norma-app.com</a>. We will respond within 30 days.</p>
 
-  <h2>9. Contact</h2>
-  <p>For questions about this Privacy Policy, contact us at <a href="mailto:privacy@norma-app.com">privacy@norma-app.com</a>.</p>
+    <h2>9. CCPA — Rights for California Residents</h2>
+    <p>If you are a California resident, the California Consumer Privacy Act (CCPA) grants you the following rights:</p>
+    <ul>
+      <li><strong>Right to know:</strong> You may request details about the categories and specific pieces of personal information we have collected about you in the past 12 months.</li>
+      <li><strong>Right to delete:</strong> You may request deletion of personal information we have collected from you, subject to certain exceptions.</li>
+      <li><strong>Right to opt out of sale:</strong> NORMA does not sell your personal information to third parties.</li>
+      <li><strong>Right to non-discrimination:</strong> We will not discriminate against you for exercising any of your CCPA rights.</li>
+    </ul>
+    <p>To submit a CCPA request, contact us at <a href="mailto:privacy@norma-app.com">privacy@norma-app.com</a>.</p>
+
+    <h2>10. Children's Privacy</h2>
+    <p>NORMA is intended for users 18 years of age or older. We do not knowingly collect data from children under 18. If we learn that we have collected data from a child under 18, we will delete it promptly.</p>
+
+    <h2>11. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated effective date. For material changes, we will make reasonable efforts to notify users through the app.</p>
+
+    <h2>12. Contact</h2>
+    <p>For questions about this Privacy Policy, contact us at <a href="mailto:privacy@norma-app.com">privacy@norma-app.com</a>.</p>
+  </main>
+  <footer>
+    <p><a href="index.html">Home</a> &middot; <a href="terms-of-service.html">Terms of Service</a> &middot; <a href="mailto:privacy@norma-app.com">privacy@norma-app.com</a></p>
+    <p>&copy; 2026 NORMA. All rights reserved.</p>
+  </footer>
 </body>
 </html>
