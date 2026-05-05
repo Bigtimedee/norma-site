@@ -1,0 +1,59 @@
+name: NORMA Twitter Agent
+
+on:
+  schedule:
+    # 9 AM ET — game preview post (morning slate)
+    - cron: "0 13 * * *"
+    # 5 PM ET — app highlight post (evening)
+    - cron: "0 21 * * *"
+  workflow_dispatch:
+    inputs:
+      post_type:
+        description: "Post type to publish"
+        required: true
+        default: "game_preview"
+        type: choice
+        options:
+          - game_preview
+          - app_highlight
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Determine post type
+        id: post_type
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "type=${{ github.event.inputs.post_type }}" >> $GITHUB_OUTPUT
+          elif [ "$(date -u +%H)" = "13" ]; then
+            echo "type=game_preview" >> $GITHUB_OUTPUT
+          else
+            echo "type=app_highlight" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run NORMA agent
+        working-directory: agent
+        env:
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          POST_TYPE: ${{ steps.post_type.outputs.type }}
+        run: python main.py
