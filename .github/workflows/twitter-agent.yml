@@ -31,21 +31,68 @@ jobs:
           python-version: "3.11"
           cache: pip
 
+      # Runs before dependencies so an unconfigured repo costs seconds, not a
+      # full install. Reports only variable NAMES; values are never echoed.
+      - name: Preflight - are the secrets configured?
+        id: preflight
+        env:
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: |
+          required=(TWITTER_API_KEY TWITTER_API_SECRET TWITTER_ACCESS_TOKEN \
+                    TWITTER_ACCESS_TOKEN_SECRET TWITTER_BEARER_TOKEN \
+                    ANTHROPIC_API_KEY ODDS_API_KEY)
+          missing=()
+          for name in "${required[@]}"; do
+            [ -z "${!name}" ] && missing+=("$name")
+          done
+
+          if [ ${#missing[@]} -eq 0 ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "All ${#required[@]} required secrets are set."
+            exit 0
+          fi
+
+          # Not configured is not a failure. Skip loudly and legibly instead of
+          # failing this job twice a day until somebody adds the secrets.
+          echo "configured=false" >> "$GITHUB_OUTPUT"
+          echo "::notice title=NORMA agent skipped::Not configured. Missing ${#missing[@]} of ${#required[@]} secrets: ${missing[*]}"
+          {
+            echo "### NORMA agent skipped - not configured"
+            echo
+            echo "Nothing was posted. Missing **${#missing[@]} of ${#required[@]}** required secrets:"
+            echo
+            for name in "${missing[@]}"; do echo "- \`$name\`"; done
+            echo
+            echo "Add them at **Settings -> Secrets and variables -> Actions -> New repository secret**."
+            echo "Names must match exactly. An unset secret interpolates to an empty string, which counts as missing."
+            echo
+            echo "See \`docs/incidents/2026-07-31-twitter-agent-missing-secrets.md\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Install dependencies
+        if: steps.preflight.outputs.configured == 'true'
         run: pip install -r requirements.txt
 
       - name: Determine post type
+        if: steps.preflight.outputs.configured == 'true'
         id: post_type
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "type=${{ github.event.inputs.post_type }}" >> $GITHUB_OUTPUT
+            echo "type=${{ github.event.inputs.post_type }}" >> "$GITHUB_OUTPUT"
           elif [ "$(date -u +%H)" = "13" ]; then
-            echo "type=game_preview" >> $GITHUB_OUTPUT
+            echo "type=game_preview" >> "$GITHUB_OUTPUT"
           else
-            echo "type=app_highlight" >> $GITHUB_OUTPUT
+            echo "type=app_highlight" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run NORMA agent
+        if: steps.preflight.outputs.configured == 'true'
         working-directory: agent
         env:
           TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
@@ -56,4 +103,15 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           POST_TYPE: ${{ steps.post_type.outputs.type }}
-        run: python main.py
+        # Exit 78 (EX_CONFIG) means "not configured" and is treated as a skip.
+        # Any other non-zero exit is a genuine failure and fails the job.
+        run: |
+          set +e
+          python main.py
+          code=$?
+          set -e
+          if [ $code -eq 78 ]; then
+            echo "::notice title=NORMA agent skipped::Agent reported a configuration error (exit 78)."
+            exit 0
+          fi
+          exit $code

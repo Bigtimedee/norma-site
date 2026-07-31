@@ -6,6 +6,15 @@ Runs twice daily via GitHub Actions to post game previews and app highlights to 
 Post types (selected by POST_TYPE env var or CLI arg):
   game_preview  – sports alert card image + tweet about today's games
   app_highlight – phone mockup image + tweet showcasing the NORMA app
+
+Exit codes:
+  0   posted successfully
+  1   a real failure (network, API rejection, bad data)
+  78  not configured — required secrets are absent (EX_CONFIG)
+
+78 is separated from 1 on purpose. A scheduled job that has never been given
+its credentials is not broken, and reporting it as broken twice a day trains
+everyone to ignore the alert that eventually matters.
 """
 
 from __future__ import annotations
@@ -15,7 +24,7 @@ import os
 import sys
 import logging
 
-from config import Config
+from config import Config, ConfigurationError, REQUIRED_ENV, SECRETS_LOCATION
 from sports_data import fetch_todays_games
 from media_generator import generate_game_alert_card, generate_app_mockup
 from content_generator import generate_game_preview_tweet, generate_app_highlight_tweet
@@ -26,15 +35,20 @@ log = logging.getLogger(__name__)
 
 POST_TYPES = ("game_preview", "app_highlight")
 
+EX_CONFIG = 78  # sysexits.h — configuration error
 
-def run(post_type: str):
+
+def run(post_type: str) -> int:
     log.info("Starting NORMA agent | post_type=%s", post_type)
 
-    cfg = Config.from_env()
-    sports = [s.strip() for s in cfg.sport.split(",")]
+    try:
+        cfg = Config.from_env()
+    except ConfigurationError as exc:
+        _report_missing_config(exc)
+        return EX_CONFIG
 
     log.info("Fetching today's games...")
-    games = fetch_todays_games(cfg.odds_api_key, sports)
+    games = fetch_todays_games(cfg.odds_api_key, cfg.sports)
     log.info("Found %d games today", len(games))
 
     twitter = TwitterClient(cfg)
@@ -59,10 +73,34 @@ def run(post_type: str):
 
     else:
         log.error("Unknown post_type: %s. Choose from: %s", post_type, POST_TYPES)
-        sys.exit(1)
+        return 1
+
+    return 0
 
 
-def main():
+def _report_missing_config(exc: ConfigurationError) -> None:
+    """
+    Say what is missing, where it comes from, and where to put it.
+
+    The previous behaviour was an unhandled traceback ending in
+    `OSError: Missing required env vars: ...`, which named the variables but
+    not what they were for or where to set them.
+    """
+    log.error("NORMA agent is not configured — nothing was posted.")
+    log.error("")
+    log.error("Missing %d of %d required secrets:", len(exc.missing), len(REQUIRED_ENV))
+    for name in exc.missing:
+        log.error("  %-30s from %s", name, REQUIRED_ENV[name])
+    present = [k for k in REQUIRED_ENV if k not in exc.missing]
+    if present:
+        log.error("Already set: %s", ", ".join(present))
+    log.error("")
+    log.error("Set them here: %s", SECRETS_LOCATION)
+    log.error("Names must match exactly. An unset secret becomes an empty string, "
+              "which counts as missing.")
+
+
+def main() -> int:
     parser = argparse.ArgumentParser(description="NORMA X/Twitter publishing agent")
     parser.add_argument(
         "post_type",
@@ -71,9 +109,23 @@ def main():
         choices=POST_TYPES,
         help="Type of post to publish (default: game_preview)",
     )
+    parser.add_argument(
+        "--check-config",
+        action="store_true",
+        help="Report configuration status and exit without posting",
+    )
     args = parser.parse_args()
-    run(args.post_type)
+
+    if args.check_config:
+        missing = Config.missing_env()
+        if missing:
+            _report_missing_config(ConfigurationError(missing))
+            return EX_CONFIG
+        log.info("All %d required secrets are set.", len(REQUIRED_ENV))
+        return 0
+
+    return run(args.post_type)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
