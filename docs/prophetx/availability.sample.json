@@ -1,0 +1,22 @@
+{
+  "_comment": [
+    "Sample remote availability config for the ProphetX integration.",
+    "Host this somewhere editable without shipping an app release and point",
+    "PROPHETX_CONFIG_URL at it. The client fails closed: if this cannot be",
+    "fetched and nothing valid is cached, ProphetX is not surfaced.",
+    "",
+    "enabled        master switch.",
+    "region_gating  when true, allowed_regions is enforced and an unknown",
+    "               region is denied. Set false only for a genuinely",
+    "               unrestricted rollout.",
+    "allowed_regions  two-letter codes, case-insensitive. Ships EMPTY on",
+    "               purpose: ProphetX has not supplied a jurisdiction list,",
+    "               and inventing one would be worse than having none.",
+    "               See question 6 in OPEN-QUESTIONS.md.",
+    "note           free text, surfaced in logs for whoever is on call."
+  ],
+  "enabled": false,
+  "region_gating": true,
+  "allowed_regions": [],
+  "note": "Pre-launch. Awaiting Market Data API access and a jurisdiction list from ProphetX."
+}

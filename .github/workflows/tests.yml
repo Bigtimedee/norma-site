@@ -1,0 +1,39 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        # No network and no credentials required: every HTTP call is mocked.
+        run: python -m pytest tests/ -q
+
+      - name: Verify the ProphetX client stays read-only
+        # Belt-and-braces alongside the equivalent unit test: NORMA's Terms of
+        # Service forbid brokering trades, so a mutating verb reaching this
+        # client must fail the build, not just a test file someone could delete.
+        run: |
+          if grep -nE '\.(post|put|patch|delete)\s*\(' prophetx/*.py; then
+            echo "::error::Mutating HTTP verb found in the read-only ProphetX client"
+            exit 1
+          fi
+          echo "OK: no mutating HTTP verbs in prophetx/"
