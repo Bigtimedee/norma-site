@@ -44,6 +44,12 @@ docs/incidents/2026-07-31-twitter-agent-missing-secrets.md.
 - [ ] A preflight check verifies configuration **before** expensive setup steps
 - [ ] Any secret this depends on is either already set in the repository, or
       the PR description names exactly which secrets an operator must add
+- [ ] **Checked whether the credential already exists elsewhere** (Supabase Edge
+      Function secrets, another host) before asking anyone to provision a new
+      one. Absence from this repository is not absence from the system — see
+      `docs/incidents/2026-08-01-failure-to-discover-existing-supabase-secrets.md`
+- [ ] If this adds a scheduled job, confirmed the chosen host is where NORMA's
+      other automation of the same kind already runs
 
 ## Compliance
 
