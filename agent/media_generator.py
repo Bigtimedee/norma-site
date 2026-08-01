@@ -103,7 +103,12 @@ def generate_game_alert_card(games: list[Game]) -> BytesIO:
     # footer
     footer_y = H - 52
     draw.line([(48, footer_y - 14), (W - 48, footer_y - 14)], fill=DIVIDER, width=1)
-    draw.text((48, footer_y), "Track every alert on NORMA  ·  norma.app",
+    # No domain is printed here. An earlier version rendered "norma.app", which is
+    # a live site belonging to an unrelated analytics company, and "norma-app.com"
+    # is likewise a different business. Printing an unverified domain on NORMA's
+    # own marketing assets sends viewers to someone else. Restore a URL here only
+    # once NORMA controls the domain and it resolves to NORMA.
+    draw.text((48, footer_y), "Track every alert on NORMA",
               font=_font(20), fill=TEXT_DIM)
     store_text = "App Store & Google Play"
     draw.text((W - 48 - _text_size(draw, store_text, _font(20))[0], footer_y),
