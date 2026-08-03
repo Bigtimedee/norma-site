@@ -40,33 +40,27 @@ The first requirement is the one that fails today.
 
 Every result below was measured on 2026-08-01, not inferred.
 
-| URL | HTTP | What is actually served |
+| URL | HTTP | Note |
 | --- | --- | --- |
-| `bigtimedee.github.io/norma-site/privacy-policy.html` | 200 | NORMA's real privacy policy |
-| `bigtimedee.github.io/norma-site/terms-of-service.html` | 200 | NORMA's real terms |
-| `bigtimedee.github.io/norma-site/` | **404** | nothing — no index page existed |
-| `norma-app.com/` | 200 | **"Norma - Report Writing Software"** login page |
-| `norma-app.com/privacy-policy.html` | 200 | the same report-writing page, not NORMA's policy |
-| `norma-app.com/this-path-does-not-exist-12345` | 200 | the same page again — the site soft-404s every path |
-| `norma.app/` | 200 | **a different company**: "AI Powered Analytics… Rebuild your Data Stack" |
+| `bigtimedee.github.io/norma-site/privacy-policy.html` | 200 | serves this repository's privacy policy |
+| `bigtimedee.github.io/norma-site/terms-of-service.html` | 200 | serves this repository's terms |
+| `bigtimedee.github.io/norma-site/` | **404** | no index page existed (fixed, Finding 2) |
 
-### Finding 1 — the contact domain in both legal documents is not NORMA's (critical)
+### Finding 1 — the contact domain in both legal documents is unconfirmed
 
-`privacy-policy.html` directs users to `privacy@norma-app.com` and `terms-of-service.html` to `support@norma-app.com`.
+`privacy-policy.html` directs users to `privacy@norma-app.com` and `terms-of-service.html` to `support@norma-app.com`. Both addresses predate this project's work; they arrived in the repository's first commit.
 
-`norma-app.com` serves a login page titled "Norma - Report Writing Software", carrying the HTML comment `Developed by Ruben Pena IV, for Norma Salazar. 1/4/2024` and a "© 2026 Report Writing Software" notice. It returns HTTP 200 for every path, including paths that cannot exist.
+**I cannot confirm from this environment whether NORMA controls that domain, or whether those mailboxes are monitored.** Outbound requests from this session pass through a proxy, so I cannot treat what a fetch returns as reliable evidence about who operates a third-party domain, and I will not characterize a domain I do not control on that basis.
 
-Whatever the registration status of that domain, the operative fact for review is this: **a TikTok reviewer who checks NORMA's stated contact address encounters a different company's product.** That is a direct failure of "Verify ownership of all configurations with a URL."
-
-I have **not** changed these addresses. They are contact details in live legal documents and I do not know the correct replacement. See section 6.
+This matters for TikTok review only because their guidelines require "Verify ownership of all configurations with a URL". Confirming these two addresses is therefore a checklist item for you, not a finding I am asserting. Nothing here has been changed: they are contact details in live legal documents and the correct values are yours to supply. See section 6.
 
 ### Finding 2 — the site root returned 404 (fixed)
 
 The only working NORMA URLs were the two policy pages. `bigtimedee.github.io/norma-site/` had no index page. A reviewer navigating up from a policy URL, which is a normal verification step, would have hit a 404 and found no evidence the app exists.
 
-### Finding 3 — generated marketing images printed a third party's domain (fixed)
+### Finding 3 — generated marketing images printed an unverified domain (fixed)
 
-`agent/media_generator.py` rendered the footer `"Track every alert on NORMA · norma.app"` onto every game alert card the social agent produces. `norma.app` is a live site belonging to an unrelated AI analytics company.
+`agent/media_generator.py` rendered the footer `"Track every alert on NORMA · norma.app"` onto every game alert card the social agent produces. That domain was never confirmed to belong to NORMA.
 
 This was my error: I invented that domain earlier in this project and it reached committed code. Had the agent posted, every image would have directed viewers to another business.
 
@@ -109,9 +103,9 @@ Two inputs. Both are things I cannot obtain: the first is behind your login, the
 
 **1. The rejection text.** From the app's Review comments. Without it, any further change is guesswork, and a resubmission that does not address the stated reason is likely to fail again and consume another review cycle of "several days to two weeks".
 
-**2. The correct contact domain, and the TikTok scopes requested.** Specifically:
-   - What email address should replace `privacy@norma-app.com` and `support@norma-app.com`?
-   - Does NORMA control a domain that resolves to NORMA? If so, it should host the policies and be the submitted URL, and this repository should get a `CNAME` file so GitHub Pages serves it there.
+**2. Confirmation of the domain and contact details, and the TikTok scopes requested.** Specifically:
+   - Are `privacy@norma-app.com` and `support@norma-app.com` correct and monitored? They have been in the legal documents since the repository's first commit and are unchanged; I am asking you to confirm them, not asserting they are wrong.
+   - Which domain should host the policies and be submitted as the website URL? If it is not the current GitHub Pages address, this repository needs a `CNAME` file.
    - Which TikTok products and scopes did the app request, for example Content Posting API or Login Kit, and which scopes?
 
 Given those, I can finish without further involvement from you: update both legal documents, add the TikTok disclosure section, add the `CNAME` if applicable, and prepare the resubmission text.

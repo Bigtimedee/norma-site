@@ -65,6 +65,22 @@ must stay read-only.
 - [ ] Privacy policy reviewed — updated if a new third-party service or a new
       category of stored user data was added, unchanged if not
 
+## Content integrity
+
+<!-- See docs/CONTENT-INTEGRITY.md. Applies to every change, not only legal
+     documents: generated images, request templates, and docs all ship outward. -->
+
+- [ ] Every domain, email address, URL, company name, personal name and number
+      in this change is **supplied by NORMA, cited to a source, or an explicit
+      bracketed placeholder** — none is invented
+- [ ] No private individual is named
+- [ ] No claim characterizes a third party's identity or ownership on the basis
+      of a fetch; observations are stated as observations
+- [ ] `privacy-policy.html` and `terms-of-service.html` are unchanged, unless
+      the change was explicitly requested
+- [ ] Claims are scoped to their evidence ("nothing in `agent/` references X",
+      not "NORMA does not use X")
+
 ## Notes for the reviewer
 
 <!-- Anything deliberately left out, known limitations, or follow-up work.

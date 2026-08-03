@@ -60,7 +60,7 @@ supply. Do not guess these.
 > **Details you may need:**
 > - Legal entity: `[company legal name]`
 > - Product: NORMA — `[iOS App Store / Google Play links]`
-> - Website: `[norma-app.com or current marketing site]`
+> - Website: `[NORMA's website URL]`
 > - Technical contact: `[name, email]`
 > - Business contact: `[name, email]`
 > - Current monthly active users: `[figure]`
