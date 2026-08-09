@@ -27,8 +27,8 @@ log = logging.getLogger(__name__)
 POST_TYPES = ("game_preview", "app_highlight")
 
 
-def run(post_type: str):
-    log.info("Starting NORMA agent | post_type=%s", post_type)
+def run(post_type: str, dry_run: bool = False):
+    log.info("Starting NORMA agent | post_type=%s dry_run=%s", post_type, dry_run)
 
     cfg = Config.from_env()
     sports = [s.strip() for s in cfg.sport.split(",")]
@@ -37,25 +37,31 @@ def run(post_type: str):
     games = fetch_todays_games(cfg.odds_api_key, sports)
     log.info("Found %d games today", len(games))
 
-    twitter = TwitterClient(cfg)
+    twitter = None if dry_run else TwitterClient(cfg)
 
     if post_type == "game_preview":
         log.info("Generating game alert card...")
         image = generate_game_alert_card(games)
         log.info("Generating tweet text...")
         text = generate_game_preview_tweet(games, cfg.anthropic_api_key)
-        log.info("Tweet: %s", text)
-        tweet_id = twitter.post_with_image(text, image, filename="norma_games.png")
-        log.info("Posted game preview tweet: https://x.com/i/web/status/%s", tweet_id)
+        log.info("Tweet (%d chars): %s", len(text), text)
+        if dry_run:
+            log.info("DRY RUN — skipping Twitter API call")
+        else:
+            tweet_id = twitter.post_with_image(text, image, filename="norma_games.png")
+            log.info("Posted game preview tweet: https://x.com/i/web/status/%s", tweet_id)
 
     elif post_type == "app_highlight":
         log.info("Generating app mockup...")
         image = generate_app_mockup(games)
         log.info("Generating tweet text...")
         text = generate_app_highlight_tweet(games, cfg.anthropic_api_key)
-        log.info("Tweet: %s", text)
-        tweet_id = twitter.post_with_image(text, image, filename="norma_app.png")
-        log.info("Posted app highlight tweet: https://x.com/i/web/status/%s", tweet_id)
+        log.info("Tweet (%d chars): %s", len(text), text)
+        if dry_run:
+            log.info("DRY RUN — skipping Twitter API call")
+        else:
+            tweet_id = twitter.post_with_image(text, image, filename="norma_app.png")
+            log.info("Posted app highlight tweet: https://x.com/i/web/status/%s", tweet_id)
 
     else:
         log.error("Unknown post_type: %s. Choose from: %s", post_type, POST_TYPES)
@@ -71,8 +77,14 @@ def main():
         choices=POST_TYPES,
         help="Type of post to publish (default: game_preview)",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=os.environ.get("DRY_RUN", "").lower() in ("1", "true", "yes"),
+        help="Generate content but skip posting to Twitter",
+    )
     args = parser.parse_args()
-    run(args.post_type)
+    run(args.post_type, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":
