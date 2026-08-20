@@ -30,7 +30,7 @@ supply. Do not guess these.
 > **What NORMA is.** NORMA is a sports alerts and wager tracking application.
 > Users follow teams, receive game alerts, and keep a personal record of wagers
 > they have placed elsewhere. NORMA already integrates market data from ESPN,
-> SportsDataIO, Sportradar and The Odds API, and already supports user-connected
+> Sportradar and The Odds API, and already supports user-connected
 > prediction market accounts for Kalshi and Polymarket.
 >
 > **What we want to build.** Two phases:
