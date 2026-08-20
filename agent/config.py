@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from typing import Optional
 
 
 class ConfigurationError(Exception):
@@ -29,7 +30,13 @@ REQUIRED_ENV: dict[str, str] = {
     "TWITTER_ACCESS_TOKEN_SECRET": "X/Twitter developer portal",
     "TWITTER_BEARER_TOKEN": "X/Twitter developer portal",
     "ANTHROPIC_API_KEY": "console.anthropic.com/settings/keys",
-    "ODDS_API_KEY": "the-odds-api.com",
+}
+
+# Optional configuration: absence degrades gracefully instead of blocking a run.
+# ODDS_API_KEY unset -> games come from ESPN's public scoreboard (no key needed)
+# instead of The Odds API; cards then show matchups without betting lines.
+OPTIONAL_ENV: dict[str, str] = {
+    "ODDS_API_KEY": "the-odds-api.com (optional; ESPN fallback without it)",
 }
 
 # Where to set them. Named in the error output so the fix does not require
@@ -52,8 +59,8 @@ class Config:
     # Anthropic
     anthropic_api_key: str
 
-    # The Odds API (https://the-odds-api.com)
-    odds_api_key: str
+    # The Odds API (https://the-odds-api.com) — optional; falls back to ESPN
+    odds_api_key: Optional[str]
 
     # Optional: sport to focus on (default covers major US sports)
     sport: str = "americanfootball_nfl,basketball_nba,baseball_mlb,icehockey_nhl"
@@ -90,6 +97,6 @@ class Config:
             twitter_access_token_secret=os.environ["TWITTER_ACCESS_TOKEN_SECRET"],
             twitter_bearer_token=os.environ["TWITTER_BEARER_TOKEN"],
             anthropic_api_key=os.environ["ANTHROPIC_API_KEY"],
-            odds_api_key=os.environ["ODDS_API_KEY"],
+            odds_api_key=os.environ.get("ODDS_API_KEY") or None,
             sport=os.environ.get("NORMA_SPORT", cls.sport),
         )

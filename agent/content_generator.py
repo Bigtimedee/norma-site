@@ -5,8 +5,13 @@ for each post type: game previews and app-highlight posts.
 
 from __future__ import annotations
 
+import logging
+import re
+
 import anthropic
 from sports_data import Game, format_moneyline
+
+log = logging.getLogger(__name__)
 
 _SYSTEM_PROMPT = """You write punchy, engaging tweets for NORMA — a sports alerts and wager tracking app.
 
@@ -22,7 +27,41 @@ Rules:
 - 1-2 relevant hashtags max
 - No gambling advice or picks
 - End with a subtle NORMA CTA when natural
-- No quotation marks around the tweet"""
+- No quotation marks around the tweet
+
+CRITICAL OUTPUT FORMAT: Your response must contain ONLY the tweet text itself.
+No preamble ("Here's a tweet:"), no separator lines (---), no markdown, no
+character-count annotations. Just the tweet."""
+
+_PREAMBLE_RE = re.compile(
+    r"^(here'?s\s+(a\s+)?tweet|here\s+is\s+(a\s+)?tweet|tweet:)",
+    re.I,
+)
+_CHAR_COUNT_RE = re.compile(r"\*?\*?character\s+count:?\s*\d+\*?\*?", re.I)
+
+
+def sanitize_tweet(text: str) -> str:
+    """Strip meta-commentary that Claude occasionally prepends or appends."""
+    # Drop everything after a --- separator
+    text = re.split(r"\n\s*---", text, maxsplit=1)[0].strip()
+
+    # Remove a leading preamble line ("Here's a tweet for you:", etc.)
+    lines = text.splitlines()
+    if lines and _PREAMBLE_RE.match(lines[0].strip()):
+        lines = lines[1:]
+
+    # Remove character-count annotation lines
+    lines = [ln for ln in lines if not _CHAR_COUNT_RE.search(ln)]
+
+    return "\n".join(lines).strip()
+
+
+def _truncate_at_word(text: str, limit: int = 280) -> str:
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    last_space = cut.rfind(" ")
+    return (cut[:last_space] if last_space > 0 else cut).rstrip()
 
 
 def generate_game_preview_tweet(games: list[Game], api_key: str) -> str:
@@ -74,16 +113,30 @@ Show the app screenshot and drive people to download it."""
 def _call_claude(user_prompt: str, api_key: str) -> str:
     client = anthropic.Anthropic(api_key=api_key)
 
-    message = client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=120,
-        system=[
-            {
-                "type": "text",
-                "text": _SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }
-        ],
-        messages=[{"role": "user", "content": user_prompt}],
-    )
-    return message.content[0].text.strip()
+    def _invoke() -> str:
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=150,
+            system=[
+                {
+                    "type": "text",
+                    "text": _SYSTEM_PROMPT,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
+            messages=[{"role": "user", "content": user_prompt}],
+        )
+        return sanitize_tweet(message.content[0].text)
+
+    text = _invoke()
+
+    if len(text) > 280:
+        log.warning("Tweet over 280 chars (%d chars), regenerating once", len(text))
+        text = _invoke()
+
+    if len(text) > 280:
+        log.warning("Still over 280 after regen (%d chars), truncating at word boundary", len(text))
+        text = _truncate_at_word(text, 280)
+
+    log.info("Final tweet (%d chars): %s", len(text), text)
+    return text

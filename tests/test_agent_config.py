@@ -73,9 +73,21 @@ def test_whitespace_only_counts_as_missing(clean_env):
 
 def test_partial_configuration_names_only_the_gaps(clean_env):
     set_all(clean_env)
-    clean_env.delenv("ODDS_API_KEY")
+    clean_env.delenv("ANTHROPIC_API_KEY")
     clean_env.setenv("TWITTER_BEARER_TOKEN", "")
-    assert set(Config.missing_env()) == {"ODDS_API_KEY", "TWITTER_BEARER_TOKEN"}
+    assert set(Config.missing_env()) == {"ANTHROPIC_API_KEY", "TWITTER_BEARER_TOKEN"}
+
+
+def test_odds_api_key_is_optional(clean_env):
+    """ODDS_API_KEY absence must not block a run: sports_data falls back to
+    ESPN's public scoreboard. Regression guard for the optionality added on
+    main (d12d39c) surviving the merge with the required-config machinery."""
+    set_all(clean_env)
+    clean_env.delenv("ODDS_API_KEY", raising=False)
+    assert Config.missing_env() == []
+    cfg = Config.from_env()
+    assert cfg.odds_api_key is None
+    assert "ODDS_API_KEY" not in REQUIRED_ENV
 
 
 def test_from_env_raises_configuration_error_listing_missing(clean_env):
@@ -88,6 +100,7 @@ def test_from_env_raises_configuration_error_listing_missing(clean_env):
 
 def test_from_env_succeeds_when_complete(clean_env):
     set_all(clean_env)
+    clean_env.setenv("ODDS_API_KEY", "x")   # optional, but honored when present
     cfg = Config.from_env()
     assert cfg.twitter_api_key == "x"
     assert cfg.odds_api_key == "x"

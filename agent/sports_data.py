@@ -42,17 +42,32 @@ class Game:
         return emojis.get(self.sport, "🏆")
 
 
-def fetch_todays_games(odds_api_key: str, sports: list[str]) -> list[Game]:
+# ESPN sport slug mapping for the public ESPN API (no key required)
+_ESPN_SPORT_SLUGS = {
+    "americanfootball_nfl": ("football", "nfl"),
+    "basketball_nba": ("basketball", "nba"),
+    "baseball_mlb": ("baseball", "mlb"),
+    "icehockey_nhl": ("hockey", "nhl"),
+}
+
+
+def fetch_todays_games(odds_api_key: Optional[str], sports: list[str]) -> list[Game]:
+    if odds_api_key:
+        return _fetch_from_odds_api(odds_api_key, sports)
+    return _fetch_from_espn(sports)
+
+
+def _fetch_from_odds_api(odds_api_key: str, sports: list[str]) -> list[Game]:
     games: list[Game] = []
     for sport in sports:
         try:
-            games.extend(_fetch_sport(odds_api_key, sport))
+            games.extend(_fetch_sport_odds(odds_api_key, sport))
         except Exception:
             pass
     return [g for g in games if g.is_today]
 
 
-def _fetch_sport(odds_api_key: str, sport: str) -> list[Game]:
+def _fetch_sport_odds(odds_api_key: str, sport: str) -> list[Game]:
     url = f"https://api.the-odds-api.com/v4/sports/{sport}/odds"
     params = {
         "apiKey": odds_api_key,
@@ -70,6 +85,47 @@ def _fetch_sport(odds_api_key: str, sport: str) -> list[Game]:
         game = _parse_game(item, sport)
         if game:
             games.append(game)
+    return games
+
+
+def _fetch_from_espn(sports: list[str]) -> list[Game]:
+    games: list[Game] = []
+    for sport in sports:
+        slugs = _ESPN_SPORT_SLUGS.get(sport)
+        if not slugs:
+            continue
+        try:
+            games.extend(_fetch_espn_sport(sport, slugs[0], slugs[1]))
+        except Exception:
+            pass
+    return games
+
+
+def _fetch_espn_sport(sport: str, espn_sport: str, espn_league: str) -> list[Game]:
+    url = f"https://site.api.espn.com/apis/site/v2/sports/{espn_sport}/{espn_league}/scoreboard"
+    resp = httpx.get(url, timeout=15)
+    resp.raise_for_status()
+    data = resp.json()
+
+    games = []
+    for event in data.get("events", []):
+        try:
+            competition = event["competitions"][0]
+            competitors = competition["competitors"]
+            home = next(c for c in competitors if c["homeAway"] == "home")
+            away = next(c for c in competitors if c["homeAway"] == "away")
+            date_str = event["date"]
+            commence = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+            game = Game(
+                id=event["id"],
+                sport=sport,
+                home_team=home["team"]["displayName"],
+                away_team=away["team"]["displayName"],
+                commence_time=commence,
+            )
+            games.append(game)
+        except (KeyError, StopIteration, ValueError):
+            continue
     return games
 
 

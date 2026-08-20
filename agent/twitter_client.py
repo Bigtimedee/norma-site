@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import logging
 from io import BytesIO
+
 import tweepy
 
 from config import Config
+
+log = logging.getLogger(__name__)
 
 
 class TwitterClient:
@@ -17,7 +21,8 @@ class TwitterClient:
         )
         self._v1 = tweepy.API(auth)
 
-        # v2 client for creating tweets
+        # v2 client for creating tweets — all four OAuth 1.0a credentials are
+        # required so create_tweet can run with user_auth=True (user context).
         self._v2 = tweepy.Client(
             bearer_token=cfg.twitter_bearer_token,
             consumer_key=cfg.twitter_api_key,
@@ -32,10 +37,18 @@ class TwitterClient:
         return media.media_id_string
 
     def post_tweet(self, text: str, media_ids: list[str] | None = None) -> str:
-        kwargs: dict = {"text": text}
+        kwargs: dict = {"text": text, "user_auth": True}
         if media_ids:
             kwargs["media_ids"] = media_ids
-        response = self._v2.create_tweet(**kwargs)
+        try:
+            response = self._v2.create_tweet(**kwargs)
+        except (tweepy.errors.Forbidden, tweepy.errors.BadRequest) as e:
+            try:
+                body = e.response.json()
+            except Exception:
+                body = str(e)
+            log.error("Twitter API %s — response body: %s", type(e).__name__, body)
+            raise
         return response.data["id"]
 
     def post_with_image(self, text: str, image_bytes: BytesIO, filename: str = "norma.png") -> str:
