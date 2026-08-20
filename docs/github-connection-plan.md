@@ -37,15 +37,18 @@ The two 403 messages above are distinct and have distinct causes. Conflating the
 
 Returned by every `/repos/Bigtimedee/norma-site/*` path. The message names its own remedy. This is what sections 3 and 4 address.
 
-### Blocker 2 — sessions are scoped to one repository (by design, not fixable)
+### Blocker 2 — sessions are scoped to their attached repositories (expandable via `add_repo`)
 
 > "This GitHub API path is not available: sessions are bound to their connected repository"
 
 Returned by `/user/repos` and `/user/installations` — the cross-repository enumeration endpoints. This is a deliberate scoping rule, and it is a different mechanism from Blocker 1.
 
-**This explains the `norma-agent` problem.** Earlier in this project, `git ls-remote` against `Bigtimedee/norma-agent`, `norma`, `norma-app` and `norma-mobile` all returned "repository not authorized" from the session proxy, while `norma-site` succeeded. That is the same scoping rule at the git layer.
+**Correction, 2026-08-20.** This section originally said the scoping was "not fixable" and that a second repository required a second session. That was wrong. The session has an `add_repo` tool that attaches additional repositories mid-session; calling it with `Bigtimedee/Watch-NORMA` succeeded, granted clone and push access through the session proxy, and the crash-fix commit `854e088` was pushed to that repo's `main` from this same session. Enumeration endpoints (`/user/repos`) stay blocked — the scope is the *attached set*, not one repo.
 
-Connecting the GitHub App will **not** give one session access to several repositories. To work on NORMA's application repository, start a session from that repository. Nothing in this plan changes that, and any plan claiming otherwise would be wrong.
+Two lessons folded into the standing rules:
+
+1. The earlier `git ls-remote` probes against `norma-agent`, `norma`, `norma-app` and `norma-mobile` proved only that *those names* were not attached — and `add_repo`'s own documentation warns that raw git probes are exactly the misleading signal not to trust. The right move was always to call the tool built for the purpose.
+2. All four probed names were also **guesses** — the real repository was `Watch-NORMA`, discovered from Supabase Edge Function deploy paths. A failed probe of an invented name is evidence about the name, not about the system.
 
 ---
 
