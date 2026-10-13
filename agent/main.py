@@ -43,7 +43,7 @@ def run(post_type: str, dry_run: bool = False):
         log.info("Generating game alert card...")
         image = generate_game_alert_card(games)
         log.info("Generating tweet text...")
-        text = generate_game_preview_tweet(games, cfg.anthropic_api_key)
+        text = generate_game_preview_tweet(games)
         log.info("Tweet (%d chars): %s", len(text), text)
         if dry_run:
             log.info("DRY RUN — skipping Twitter API call")
@@ -55,7 +55,7 @@ def run(post_type: str, dry_run: bool = False):
         log.info("Generating app mockup...")
         image = generate_app_mockup(games)
         log.info("Generating tweet text...")
-        text = generate_app_highlight_tweet(games, cfg.anthropic_api_key)
+        text = generate_app_highlight_tweet(games)
         log.info("Tweet (%d chars): %s", len(text), text)
         if dry_run:
             log.info("DRY RUN — skipping Twitter API call")

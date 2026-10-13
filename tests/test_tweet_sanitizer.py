@@ -99,7 +99,7 @@ def test_truncate_one_over():
 
 
 def test_over_280_pipeline():
-    """Sanitize + truncate together mirrors the _call_claude fallback path."""
+    """Sanitize + truncate together mirrors the _finalize path."""
     long_preamble = (
         "Here's a tweet for you:\n"
         + ("This is a very long tweet that goes well over the limit. " * 6)

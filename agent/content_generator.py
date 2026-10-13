@@ -1,6 +1,6 @@
 """
-Uses Claude (claude-haiku-4-5) with prompt caching to generate tweet text
-for each post type: game previews and app-highlight posts.
+Deterministic template-based tweet text for each post type:
+game previews and app-highlight posts. No external AI provider.
 """
 
 from __future__ import annotations
@@ -8,30 +8,9 @@ from __future__ import annotations
 import logging
 import re
 
-import anthropic
 from sports_data import Game, format_moneyline
 
 log = logging.getLogger(__name__)
-
-_SYSTEM_PROMPT = """You write punchy, engaging tweets for NORMA — a sports alerts and wager tracking app.
-
-NORMA helps fans:
-- Get instant game alerts for their teams
-- Track their wagers in one place
-- See live odds from major sportsbooks
-- Monitor Kalshi and Polymarket predictions
-
-Tone: energetic, knowledgeable sports fan. No fluff. No em-dashes.
-Rules:
-- Max 240 characters (leave room for image)
-- 1-2 relevant hashtags max
-- No gambling advice or picks
-- End with a subtle NORMA CTA when natural
-- No quotation marks around the tweet
-
-CRITICAL OUTPUT FORMAT: Your response must contain ONLY the tweet text itself.
-No preamble ("Here's a tweet:"), no separator lines (---), no markdown, no
-character-count annotations. Just the tweet."""
 
 _PREAMBLE_RE = re.compile(
     r"^(here'?s\s+(a\s+)?tweet|here\s+is\s+(a\s+)?tweet|tweet:)",
@@ -41,7 +20,7 @@ _CHAR_COUNT_RE = re.compile(r"\*?\*?character\s+count:?\s*\d+\*?\*?", re.I)
 
 
 def sanitize_tweet(text: str) -> str:
-    """Strip meta-commentary that Claude occasionally prepends or appends."""
+    """Strip meta-commentary (preambles, separators, char-count notes)."""
     # Drop everything after a --- separator
     text = re.split(r"\n\s*---", text, maxsplit=1)[0].strip()
 
@@ -64,7 +43,7 @@ def _truncate_at_word(text: str, limit: int = 280) -> str:
     return (cut[:last_space] if last_space > 0 else cut).rstrip()
 
 
-def generate_game_preview_tweet(games: list[Game], api_key: str) -> str:
+def generate_game_preview_tweet(games: list[Game], api_key: str = "") -> str:
     if not games:
         return "Big sports day ahead. Track every game alert in real time with NORMA. 🏆 #Sports"
 
@@ -80,17 +59,12 @@ def generate_game_preview_tweet(games: list[Game], api_key: str) -> str:
             f"{g.sport_emoji} {away} @ {home} | {g.time_str} | ML: {away} {ml_away} / {home} {ml_home} | {spread} | {ou}"
         )
 
-    games_text = "\n".join(game_summaries)
-    prompt = f"""Write a tweet previewing today's games. Here are the matchups with odds:
-
-{games_text}
-
-Pick the most interesting matchup or angle. Do not give a pick or gambling advice."""
-
-    return _call_claude(prompt, api_key)
+    lead = game_summaries[0]
+    text = f"Today's slate: {lead}. {len(games)} games on the board. Live alerts and odds in NORMA. #NORMA"
+    return _finalize(text)
 
 
-def generate_app_highlight_tweet(games: list[Game], api_key: str) -> str:
+def generate_app_highlight_tweet(games: list[Game], api_key: str = "") -> str:
     game_count = len(games)
     sports = list({g.sport for g in games})
     sport_names = {
@@ -102,41 +76,14 @@ def generate_app_highlight_tweet(games: list[Game], api_key: str) -> str:
     sport_labels = [sport_names.get(s, s) for s in sports]
     sports_str = " + ".join(sport_labels)
 
-    prompt = f"""Write a tweet showcasing the NORMA app.
-Context: There are {game_count} games today across {sports_str}.
-Highlight how NORMA makes tracking alerts and wagers easy.
-Show the app screenshot and drive people to download it."""
+    text = (
+        f"{game_count} games today across {sports_str or 'the board'}. "
+        "Alerts, live odds and every wager in one place. Get NORMA. #NORMA"
+    )
+    return _finalize(text)
 
-    return _call_claude(prompt, api_key)
 
-
-def _call_claude(user_prompt: str, api_key: str) -> str:
-    client = anthropic.Anthropic(api_key=api_key)
-
-    def _invoke() -> str:
-        message = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=150,
-            system=[
-                {
-                    "type": "text",
-                    "text": _SYSTEM_PROMPT,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
-            messages=[{"role": "user", "content": user_prompt}],
-        )
-        return sanitize_tweet(message.content[0].text)
-
-    text = _invoke()
-
-    if len(text) > 280:
-        log.warning("Tweet over 280 chars (%d chars), regenerating once", len(text))
-        text = _invoke()
-
-    if len(text) > 280:
-        log.warning("Still over 280 after regen (%d chars), truncating at word boundary", len(text))
-        text = _truncate_at_word(text, 280)
-
+def _finalize(text: str) -> str:
+    text = _truncate_at_word(sanitize_tweet(text), 280)
     log.info("Final tweet (%d chars): %s", len(text), text)
     return text
