@@ -84,7 +84,11 @@ def main():
         help="Generate content but skip posting to Twitter",
     )
     args = parser.parse_args()
-    run(args.post_type, dry_run=args.dry_run)
+    try:
+        run(args.post_type, dry_run=args.dry_run)
+    except Exception as exc:  # fail soft: never crash the workflow, never post
+        log.error("NORMA agent failed, skipping post: %s: %s", type(exc).__name__, exc)
+        sys.exit(0)
 
 
 if __name__ == "__main__":

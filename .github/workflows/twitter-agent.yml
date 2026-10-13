@@ -1,11 +1,9 @@
 name: NORMA Twitter Agent
 
 on:
-  schedule:
-    # 9 AM ET — game preview post (morning slate)
-    - cron: "0 13 * * *"
-    # 5 PM ET — app highlight post (evening)
-    - cron: "0 21 * * *"
+  # Schedule disabled 2026-10-12: @watchNORMA now publishes via Supabase
+  # cmo-publish from content_calendar. This legacy agent posts to X directly
+  # and would duplicate / go off-brand. Manual dispatch only.
   workflow_dispatch:
     inputs:
       post_type:
@@ -16,6 +14,11 @@ on:
         options:
           - game_preview
           - app_highlight
+      dry_run:
+        description: "Generate content but do not post to X"
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   post:
@@ -56,4 +59,5 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           POST_TYPE: ${{ steps.post_type.outputs.type }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'true' }}
         run: python main.py
