@@ -18,18 +18,18 @@ Scheduled via `.github/workflows/twitter-agent.yml`. Runs twice daily (9 AM ET g
 
 ### Tweet posted with meta-commentary ("Here's a tweet:", "---", "**Character count: N**")
 
-**Root cause:** Claude was returning the tweet wrapped in preamble and annotations. The raw API response was being posted verbatim.
+**Root cause:** The (former) AI text generator was returning the tweet wrapped in preamble and annotations. The raw API response was being posted verbatim.
 
 **Fix (applied Aug 2026):**
 - System prompt now includes an explicit `CRITICAL OUTPUT FORMAT` instruction.
 - `sanitize_tweet()` in `agent/content_generator.py` strips preamble lines, `---` separators, and character-count annotations defensively before the text is used.
-- `_call_claude()` logs the final char count on every run — check the Actions log line `Final tweet (N chars): ...` to verify clean output.
+- `_finalize()` logs the final char count on every run — check the Actions log line `Final tweet (N chars): ...` to verify clean output.
 
 ---
 
 ### Tweet exceeds 280 characters
 
-`_call_claude()` sanitizes, then regenerates once if still over 280, then truncates at a word boundary as a last resort. The log will show `Tweet over 280 chars` / `Still over 280 after regen` warnings if either fallback fires.
+`_finalize()` sanitizes, then truncates at a word boundary as a last resort. The log will show `Tweet over 280 chars` / `Still over 280 after regen` warnings if either fallback fires.
 
 If this becomes frequent, tighten the prompt's character cap (currently 240 to leave room for the attached image).
 
@@ -59,5 +59,7 @@ The log will show the generated tweet text and char count, then `DRY RUN — ski
 | `TWITTER_ACCESS_TOKEN` | OAuth 1.0a access token |
 | `TWITTER_ACCESS_TOKEN_SECRET` | OAuth 1.0a access token secret |
 | `TWITTER_BEARER_TOKEN` | Used for v2 Client construction (not for posting) |
-| `ANTHROPIC_API_KEY` | Tweet generation via Claude Haiku |
 | `ODDS_API_KEY` | Live odds (optional — falls back to ESPN public API) |
+
+
+> 2026-10-12: Third-party AI provider removed. Tweet text is now deterministic templates. Schedule disabled; @watchNORMA publishes via Supabase cmo-publish. Manual dispatch defaults to dry run.

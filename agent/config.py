@@ -12,9 +12,6 @@ class Config:
     twitter_access_token_secret: str
     twitter_bearer_token: str
 
-    # Anthropic
-    anthropic_api_key: str
-
     # The Odds API (https://the-odds-api.com) — optional; falls back to ESPN
     odds_api_key: Optional[str]
 
@@ -30,7 +27,6 @@ class Config:
             "TWITTER_ACCESS_TOKEN",
             "TWITTER_ACCESS_TOKEN_SECRET",
             "TWITTER_BEARER_TOKEN",
-            "ANTHROPIC_API_KEY",
         ]
         for key in required:
             if not os.environ.get(key):
@@ -44,7 +40,6 @@ class Config:
             twitter_access_token=os.environ["TWITTER_ACCESS_TOKEN"],
             twitter_access_token_secret=os.environ["TWITTER_ACCESS_TOKEN_SECRET"],
             twitter_bearer_token=os.environ["TWITTER_BEARER_TOKEN"],
-            anthropic_api_key=os.environ["ANTHROPIC_API_KEY"],
             odds_api_key=os.environ.get("ODDS_API_KEY") or None,
             sport=os.environ.get("NORMA_SPORT", cls.sport),
         )

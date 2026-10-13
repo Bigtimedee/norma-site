@@ -54,6 +54,4 @@ CI runs the same suite plus the read-only guard on every push and PR.
 
 `docs/prophetx/API-ACCESS-REQUEST.md` is drafted and ready to send, with bracketed placeholders for company legal name, contacts and MAU that were deliberately not invented.
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-https://claude.ai/code/session_012RfYHrvvZTcPFWJXJ5ARhM
